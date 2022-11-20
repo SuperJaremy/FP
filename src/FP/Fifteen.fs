@@ -1,16 +1,20 @@
 ﻿namespace FP.Fifteen
-module Recursion =
-    let rec private countPaths_in (point : bigint, matrixSide : bigint) =
-        if point = bigint.Zero then
-            bigint.One
-        elif (point < matrixSide + bigint.One) then
-            countPaths_in ((point - bigint.One), matrixSide)
-        elif (point % (matrixSide + bigint.One) = bigint.Zero) then
-            countPaths_in ((point - matrixSide - bigint.One), matrixSide)
-        else
-            (countPaths_in ((point - bigint.One, matrixSide))
-            + (countPaths_in ((point - (matrixSide + bigint.One)), matrixSide)))
 
-    let countPaths matrixSide:bigint = countPaths_in (((matrixSide + bigint.One) * (matrixSide + bigint.One) - bigint.One), matrixSide)
-    
-    // printfn "The answer is %A" (countPaths 15I)
+module Recursion =
+    let rec private countPaths_in point matrixSide =
+        let sideDots = matrixSide + 1
+
+        if point = 0 then
+            1UL
+        elif point < sideDots then
+            countPaths_in (point - 1) matrixSide
+        elif point % sideDots = 0 then
+            countPaths_in (point - sideDots) matrixSide
+        else
+            (countPaths_in (point - 1) matrixSide
+             + (countPaths_in (point - sideDots) matrixSide))
+
+    let countPaths matrixSide =
+        countPaths_in ((matrixSide + 1) * (matrixSide + 1) - 1) matrixSide
+
+    printfn "The answer is %u" (countPaths 18)

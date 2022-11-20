@@ -7,5 +7,5 @@ open NUnit.Framework
 let Setup () = ()
 
 [<Test>]
-let Test1 () = Assert.AreEqual(6I, Recursion.countPaths 2I)
+let Test1 () = Assert.AreEqual(6UL, Recursion.countPaths 2)
 
