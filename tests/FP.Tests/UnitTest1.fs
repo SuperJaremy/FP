@@ -1,6 +1,5 @@
 module FP.Tests
 
-open System.Runtime.InteropServices
 open NUnit.Framework
 
 [<SetUp>]
@@ -38,4 +37,3 @@ let Test10 () = Assert.AreEqual(26u, Sixteen.Loop.solution 15)
 
 [<Test>]
 let Test11 () = Assert.AreEqual(6UL, Fifteen.Sequence.countPaths 2)
-
