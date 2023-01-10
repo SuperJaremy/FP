@@ -8,7 +8,7 @@
         "fsdocs"
       ]
     },
-    "fantomas-tool": {
+    "fantomas": {
       "version": "5.0.0",
       "commands": [
         "fantomas"
