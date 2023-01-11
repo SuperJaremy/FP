@@ -8,6 +8,7 @@ uint64_t count_paths(size_t matrix_side) {
   size_t i;
   int side_dots = matrix_side + 1;
   int last_dot = side_dots * side_dots - 1;
+  uint64_t ans = 0;
   uint64_t *paths = malloc(sizeof(uint64_t) * (last_dot + 1));
   for (i = 0; i < last_dot + 1; i++) {
     if (i == 0 || i < side_dots || i % side_dots == 0) {
@@ -16,7 +17,9 @@ uint64_t count_paths(size_t matrix_side) {
       paths[i] = paths[i - 1] + paths[i - side_dots];
     }
   }
-  return paths[last_dot];
+  ans = paths[last_dot];
+  free(paths);
+  return ans;
 }
 
 int main() {
