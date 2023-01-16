@@ -8,8 +8,8 @@
         "fsdocs"
       ]
     },
-    "fantomas-tool": {
-      "version": "4.6.0-alpha-005",
+    "fantomas": {
+      "version": "5.0.0",
       "commands": [
         "fantomas"
       ]
