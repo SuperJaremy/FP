@@ -36,7 +36,7 @@ module AVLTree =
             |E -> InvalidOperationException("Invalid right rotation") |> raise
             |T(l, i, r) -> T(l, i, T(r, item, right))
             
-    let balanceTree tree =
+    let private balanceTree tree =
         match tree with
         |T(left, item, right) ->
             if balanceFactor tree = 2 then
@@ -60,9 +60,9 @@ module AVLTree =
         |E -> T(E,a,E)
         |T(left, item, right) ->
             if a < item then
-                balanceTree (T((insert a left), item, right))
+                T((insert a left), item, right) |> balanceTree
             else
-                balanceTree (T(left, item, (insert a right)))
+                T(left, item, (insert a right)) |> balanceTree
                 
     let rec private findMax tree =
         match tree with
@@ -113,7 +113,6 @@ module AVLTree =
         match tree with
         |E -> state
         |T(left, item, right) ->
-            // foldLeft folder (folder (foldLeft folder state left) item) right
             foldLeft folder state left |>
             fun x -> folder x item |>
                      fun x -> foldLeft folder x right
