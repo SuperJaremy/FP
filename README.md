@@ -82,7 +82,7 @@ let rec private treeHeight tree =
 let rec private findMax tree =
         match tree with
         | E -> InvalidOperationException("Searching for max in empty tree") |> raise
-        | T (E, item, E) -> item
+        | T (_, item, E) -> item
         | T (_, _, right) -> findMax right
 
     let rec delete a tree =
