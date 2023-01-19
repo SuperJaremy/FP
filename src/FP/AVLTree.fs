@@ -106,16 +106,33 @@ module AVLTree =
     let rec filter cond tree =
         match tree with
         | E -> E
+        | T (E, item, E) -> if cond item then tree else E
+        | T (left, item, E) ->
+            if cond item then
+                T(filter cond left, item, E)
+            else
+                filter cond left
+        | T (E, item, right) ->
+            if cond item then
+                T(E, item, filter cond right)
+            else
+                filter cond right
         | T (left, item, right) ->
             if cond item then
-                T((filter cond left), item, (filter cond right))
+                concat (filter cond left |> insert item) (filter cond right)
             else
                 concat (filter cond left) (filter cond right)
 
-    let rec map f tree =
+
+    let rec private _map f tree state =
+        match tree with
+        | E -> state
+        | T (left, item, right) -> insert (f item) state |> _map f left |> _map f right
+
+    let map f tree =
         match tree with
         | E -> E
-        | T (left, item, right) -> T((map f left), f item, (map f right))
+        | T _ -> _map f tree E
 
     let rec foldLeft folder state tree =
         match tree with

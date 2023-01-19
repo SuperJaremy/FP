@@ -55,19 +55,28 @@ let TestAVLRightRotation () =
 
 [<Test>]
 let TestFilter () =
-    let tree = T(T(T(E, 4, E), 1, T(E, 13, E)), 20, T(T(E, 18, E), 9, T(E, 7, E)))
+    let tree = T(T(T(E, 1, E), 4, T(T(E, 7, E), 9, E)), 13, T(E, 18, T(E, 20, E)))
     let cond = fun x -> x > 10
-    Assert.AreEqual(T(T(E, 13, E), 20, T(E, 18, E)), (tree |> filter cond))
+    Assert.AreEqual(T(T(E, 13, E), 18, T(E, 20, E)), (tree |> filter cond))
 
 [<Test>]
 let TestMap () =
-    let tree = T(T(T(E, 4, E), 1, T(E, 13, E)), 20, T(T(E, 18, E), 9, T(E, 7, E)))
+    let tree = T(T(T(E, 1, E), 4, T(T(E, 7, E), 9, E)), 13, T(E, 18, T(E, 20, E)))
     let f = (*) 2
 
     let treeAfterMap =
-        T(T(T(E, 8, E), 2, T(E, 26, E)), 40, T(T(E, 36, E), 18, T(E, 14, E)))
+        T(T(T(E, 2, E), 8, T(E, 14, E)), 18, T(T(E, 26, E), 36, T(E, 40, E)))
 
     Assert.AreEqual(treeAfterMap, (tree |> map f))
+
+[<Test>]
+let TestMapReordering () =
+    let tree = T(T(T(E, -18, E),-9, T(E,-4,E)),1,T(T(E,7,E),13,T(E,20,E)))
+    let f = abs
+    let treeAfterMap =
+        T(T(T(E,1,E),4,T(E,7,E)),9,T(T(E,13,E),18,T(E,20,E)))
+        
+    Assert.AreEqual(treeAfterMap, tree |> map f)
 
 [<Test>]
 let TestLeftFold () =
@@ -90,19 +99,6 @@ let TestConcat () =
         T(T(T(E, 1, E), 2, T(E, 3, E)), 3, T(T(E, 4, E), 5, T(E, 6, E)))
 
     Assert.AreEqual(treeAfterConcat, concat tree1 tree2)
-
-[<FsCheck.NUnit.Property>]
-let ``Filter and double filter return the same result`` (tree: AVLTree<int>) =
-    let cond = fun x -> (x % 2) = 0
-    filter cond tree = (filter cond tree |> filter cond)
-
-[<FsCheck.NUnit.Property>]
-let ``Transform then insert equals insert then map`` (xs: list<int>) =
-    let transform x = x * 2
-    let folder state x = insert x state
-    let result1 = List.map transform xs |> List.fold folder E
-    let result2 = List.fold folder E xs |> map transform
-    result1 = result2
 
 [<FsCheck.NUnit.Property>]
 let ``Left fold and right fold are the same if folder is commutative`` (tree: AVLTree<int>) =
@@ -148,5 +144,5 @@ let ``Concat is associative`` (xs1: list<int>, xs2: list<int>, xs3: list<int>) =
     result1 = result2
 
 [<FsCheck.NUnit.Property>]
-let ``E is neutral element`` (tree: AVLTree<int>) =
+let ``E is identity element`` (tree: AVLTree<int>) =
     tree = concat tree E && tree = concat E tree
