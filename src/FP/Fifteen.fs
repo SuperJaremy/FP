@@ -13,6 +13,23 @@ module Recursion =
     let countPaths matrixSide =
         countPaths_in ((matrixSide + 1) * (matrixSide + 1) - 1) matrixSide
 
+module TailRecursion =
+    let rec private countPaths_in point matrixSide state =
+        let sideDots = matrixSide + 1
+        if point > 0 then
+            let  newState = countPaths_in (point - 1) matrixSide state
+            if point < sideDots || point % sideDots = 0 then
+                List.insertAt point 1UL newState
+            else
+                List.insertAt point (newState[point - 1] + newState[point - sideDots]) newState
+        else
+            [0UL]
+            
+    let countPaths matrixSide =
+        let point = ((matrixSide + 1) * (matrixSide + 1) - 1)
+        List.item point (countPaths_in point matrixSide [])
+            
+
 module Sequence =
     let countPaths matrixSide =
         let sideDots = matrixSide + 1

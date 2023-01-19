@@ -48,3 +48,7 @@ let Test10 () =
 [<Test>]
 let Test11 () =
     Assert.AreEqual(6UL, Fifteen.Sequence.countPaths 2)
+    
+[<Test>]
+let Test12 () =
+    Assert.AreEqual(6UL, Fifteen.TailRecursion.countPaths 2)
