@@ -1,3 +1,4 @@
+![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/SuperJaremy/d4297ee28b9cca7dc6c6d9b41dccebf1/raw/code-coverage.json)
 # Лабораторная работа 2
 
 
@@ -26,17 +27,17 @@
 type AVLTree<'a> =
         | E
         | T of AVLTree<'a> * 'a * AVLTree<'a>
+
+        member x.Height =
+            match x with
+            | E -> 0
+            | T (left, _, right) -> (max left.Height right.Height) + 1
 ```
 ## Балансировка
 ```F#
-let rec private treeHeight tree =
+let private balanceFactor tree =
         match tree with
-        | E -> 0
-        | T (left, _, right) -> (Math.Max((treeHeight left), (treeHeight right))) + 1
-
-    let private balanceFactor tree =
-        match tree with
-        | T (left, _, right) -> (treeHeight right) - (treeHeight left)
+        | T (left, _, right) -> right.Height - left.Height
         | _ -> 0
 
     let private rotateLeft tree =
@@ -132,21 +133,37 @@ let rec private findMax tree =
 ```
 ### Фильтрация
 ```F#
- let rec filter cond tree =
+  let rec filter cond tree =
         match tree with
         | E -> E
+        | T (E, item, E) -> if cond item then tree else E
+        | T (left, item, E) ->
+            if cond item then
+                T(filter cond left, item, E)
+            else
+                filter cond left
+        | T (E, item, right) ->
+            if cond item then
+                T(E, item, filter cond right)
+            else
+                filter cond right
         | T (left, item, right) ->
             if cond item then
-                T((filter cond left), item, (filter cond right))
+                concat (filter cond left |> insert item) (filter cond right)
             else
                 concat (filter cond left) (filter cond right)
 ```
 ### Отображение
 ```F#
-    let rec map f tree =
+ let rec private _map f tree state =
+        match tree with
+        | E -> state
+        | T (left, item, right) -> insert (f item) state |> _map f left |> _map f right
+
+    let map f tree =
         match tree with
         | E -> E
-        | T (left, item, right) -> T((map f left), f item, (map f right))
+        | T _ -> _map f tree E
 ```
 ### Свёртка
 #### Левая
@@ -220,19 +237,29 @@ let TestAVLRightRotation () =
 
 [<Test>]
 let TestFilter () =
-    let tree = T(T(T(E, 4, E), 1, T(E, 13, E)), 20, T(T(E, 18, E), 9, T(E, 7, E)))
+    let tree = T(T(T(E, 1, E), 4, T(T(E, 7, E), 9, E)), 13, T(E, 18, T(E, 20, E)))
     let cond = fun x -> x > 10
-    Assert.AreEqual(T(T(E, 13, E), 20, T(E, 18, E)), (tree |> filter cond))
+    Assert.AreEqual(T(T(E, 13, E), 18, T(E, 20, E)), (tree |> filter cond))
 
 [<Test>]
 let TestMap () =
-    let tree = T(T(T(E, 4, E), 1, T(E, 13, E)), 20, T(T(E, 18, E), 9, T(E, 7, E)))
+    let tree = T(T(T(E, 1, E), 4, T(T(E, 7, E), 9, E)), 13, T(E, 18, T(E, 20, E)))
     let f = (*) 2
 
     let treeAfterMap =
-        T(T(T(E, 8, E), 2, T(E, 26, E)), 40, T(T(E, 36, E), 18, T(E, 14, E)))
+        T(T(T(E, 2, E), 8, T(E, 14, E)), 18, T(T(E, 26, E), 36, T(E, 40, E)))
 
     Assert.AreEqual(treeAfterMap, (tree |> map f))
+
+[<Test>]
+let TestMapReordering () =
+    let tree = T(T(T(E, -18, E), -9, T(E, -4, E)), 1, T(T(E, 7, E), 13, T(E, 20, E)))
+    let f = abs
+
+    let treeAfterMap =
+        T(T(T(E, 1, E), 4, T(E, 7, E)), 9, T(T(E, 13, E), 18, T(E, 20, E)))
+
+    Assert.AreEqual(treeAfterMap, tree |> map f)
 
 [<Test>]
 let TestLeftFold () =
@@ -255,23 +282,9 @@ let TestConcat () =
         T(T(T(E, 1, E), 2, T(E, 3, E)), 3, T(T(E, 4, E), 5, T(E, 6, E)))
 
     Assert.AreEqual(treeAfterConcat, concat tree1 tree2)
-
 ```
 ## Property-based тестирование
 ```F#
-[<FsCheck.NUnit.Property>]
-let ``Filter and double filter return the same result`` (tree: AVLTree<int>) =
-    let cond = fun x -> (x % 2) = 0
-    filter cond tree = (filter cond tree |> filter cond)
-
-[<FsCheck.NUnit.Property>]
-let ``Transform then insert equals insert then map`` (xs: list<int>) =
-    let transform x = x * 2
-    let folder state x = insert x state
-    let result1 = List.map transform xs |> List.fold folder E
-    let result2 = List.fold folder E xs |> map transform
-    result1 = result2
-
 [<FsCheck.NUnit.Property>]
 let ``Left fold and right fold are the same if folder is commutative`` (tree: AVLTree<int>) =
     let folder sum x = sum + x
@@ -316,6 +329,6 @@ let ``Concat is associative`` (xs1: list<int>, xs2: list<int>, xs3: list<int>) =
     result1 = result2
 
 [<FsCheck.NUnit.Property>]
-let ``E is neutral element`` (tree: AVLTree<int>) =
+let ``E is identity element`` (tree: AVLTree<int>) =
     tree = concat tree E && tree = concat E tree
 ```
