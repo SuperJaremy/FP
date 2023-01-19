@@ -16,19 +16,20 @@ module Recursion =
 module TailRecursion =
     let rec private countPaths_in point matrixSide state =
         let sideDots = matrixSide + 1
-        if point > 0 then
-            let  newState = countPaths_in (point - 1) matrixSide state
-            if point < sideDots || point % sideDots = 0 then
-                List.insertAt point 1UL newState
-            else
-                List.insertAt point (newState[point - 1] + newState[point - sideDots]) newState
-        else
-            [0UL]
-            
+
+        match point with
+        | 0 -> [ 0UL ]
+        | _ ->
+            let newState = countPaths_in (point - 1) matrixSide state
+
+            match point with
+            | idx when point < sideDots || point % sideDots = 0 -> List.insertAt idx 1UL newState
+            | _ -> List.insertAt point (newState[point - 1] + newState[point - sideDots]) newState
+
     let countPaths matrixSide =
         let point = ((matrixSide + 1) * (matrixSide + 1) - 1)
         List.item point (countPaths_in point matrixSide [])
-            
+
 
 module Sequence =
     let countPaths matrixSide =

@@ -15,18 +15,24 @@ module Recursion =
 
 module TailRecursion =
     let rec private powerOfTwo_in power acc =
-        if power = 0 then
-            acc
-        else
-            powerOfTwo_in (power - 1) (2I * acc)
+        // if power = 0 then
+        //     acc
+        // else
+        //     powerOfTwo_in (power - 1) (2I * acc)
+        match power with
+        | 0 -> acc
+        | _ -> powerOfTwo_in (power - 1) (2I * acc)
 
     let powerOfTwo power = powerOfTwo_in power 1I
 
     let rec private sumOfDigits_in (num: bigint, acc) =
-        if num < 10I then
-            acc + (uint num)
-        else
-            sumOfDigits_in (num / 10I, acc + ((num % 10I) |> uint))
+        // if num < 10I then
+        //     acc + (uint num)
+        // else
+        //     sumOfDigits_in (num / 10I, acc + ((num % 10I) |> uint))
+        match num with
+        | num when num < 10I -> acc + (uint num)
+        | _ -> sumOfDigits_in (num / 10I, acc + ((num % 10I) |> uint))
 
     let sumOfDigits num = sumOfDigits_in (num, 0u)
 
