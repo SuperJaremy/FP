@@ -71,11 +71,12 @@ let TestMap () =
 
 [<Test>]
 let TestMapReordering () =
-    let tree = T(T(T(E, -18, E),-9, T(E,-4,E)),1,T(T(E,7,E),13,T(E,20,E)))
+    let tree = T(T(T(E, -18, E), -9, T(E, -4, E)), 1, T(T(E, 7, E), 13, T(E, 20, E)))
     let f = abs
+
     let treeAfterMap =
-        T(T(T(E,1,E),4,T(E,7,E)),9,T(T(E,13,E),18,T(E,20,E)))
-        
+        T(T(T(E, 1, E), 4, T(E, 7, E)), 9, T(T(E, 13, E), 18, T(E, 20, E)))
+
     Assert.AreEqual(treeAfterMap, tree |> map f)
 
 [<Test>]
