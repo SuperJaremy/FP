@@ -82,7 +82,7 @@ let rec private treeHeight tree =
 let rec private findMax tree =
         match tree with
         | E -> InvalidOperationException("Searching for max in empty tree") |> raise
-        | T (E, item, E) -> item
+        | T (_, item, E) -> item
         | T (_, _, right) -> findMax right
 
     let rec delete a tree =
@@ -102,13 +102,33 @@ let rec private findMax tree =
 ```
 ### Конкатенация
 ```F#
-let rec concat tree1 tree2 =
+    let rec private _concat tree1 tree2 state =
+        match tree1, tree2 with
+        | T _, T _ ->
+            let max1 = findMax tree1
+            let max2 = findMax tree2
+
+            if max1 >= max2 then
+                _concat (delete max1 tree1) tree2 (insert max1 state)
+            else
+                _concat tree1 (delete max2 tree2) (insert max2 state)
+        | E, T _ ->
+            let treeMax = findMax tree2
+            _concat tree1 (delete treeMax tree2) (insert treeMax state)
+        | T _, E ->
+            let treeMax = findMax tree1
+            _concat (delete treeMax tree1) tree2 (insert treeMax state)
+        | _ -> state
+
+
+
+    let concat tree1 tree2 =
         match tree2 with
         | E -> tree1
         | _ ->
             match tree1 with
             | E -> tree2
-            | T (left, item, right) -> insert item tree2 |> concat left |> concat right
+            | T _ -> _concat tree1 tree2 E
 ```
 ### Фильтрация
 ```F#
@@ -149,11 +169,6 @@ let rec concat tree1 tree2 =
 ```
 ## Unit-тестирование
 ```F#
-module FP.Tests
-
-open NUnit.Framework
-open AVLTree
-
 [<Test>]
 let TestInsertToEmpty () =
     Assert.AreEqual(T(E, 5, E), (insert 5 E))
@@ -237,8 +252,70 @@ let TestConcat () =
     let tree2 = T(T(T(E, 3, E), 4, E), 5, T(E, 6, E))
 
     let treeAfterConcat =
-        T(T(T(E, 1, E), 2, E), 3, T(T(T(E, 3, E), 4, E), 5, T(E, 6, E)))
+        T(T(T(E, 1, E), 2, T(E, 3, E)), 3, T(T(E, 4, E), 5, T(E, 6, E)))
 
     Assert.AreEqual(treeAfterConcat, concat tree1 tree2)
 
+```
+## Property-based тестирование
+```F#
+[<FsCheck.NUnit.Property>]
+let ``Filter and double filter return the same result`` (tree: AVLTree<int>) =
+    let cond = fun x -> (x % 2) = 0
+    filter cond tree = (filter cond tree |> filter cond)
+
+[<FsCheck.NUnit.Property>]
+let ``Transform then insert equals insert then map`` (xs: list<int>) =
+    let transform x = x * 2
+    let folder state x = insert x state
+    let result1 = List.map transform xs |> List.fold folder E
+    let result2 = List.fold folder E xs |> map transform
+    result1 = result2
+
+[<FsCheck.NUnit.Property>]
+let ``Left fold and right fold are the same if folder is commutative`` (tree: AVLTree<int>) =
+    let folder sum x = sum + x
+    let result1 = foldLeft folder 0 tree
+    let result2 = foldRight folder 0 tree
+    result1 = result2
+
+let rec treeHeight tree =
+    match tree with
+    | E -> 0
+    | T (left, _, right) -> (max (treeHeight left) (treeHeight right)) + 1
+
+[<FsCheck.NUnit.Property>]
+let ``Tree is balanced after inserts`` (xs: list<int>) =
+    let folder state x = insert x state
+    let tree = List.fold folder E xs
+
+    match tree with
+    | E -> true
+    | T (left, _, right) -> abs ((treeHeight left) - (treeHeight right)) <= 1
+
+[<FsCheck.NUnit.Property>]
+let ``Tree is balanced after delete`` (xs: list<int>) =
+    if xs.IsEmpty then
+        true
+    else
+        let folder state x = insert x state
+        let tree = List.fold folder E xs |> delete (List.item (xs.Length / 2) xs)
+
+        match tree with
+        | E -> true
+        | T (left, _, right) -> abs ((treeHeight left) - (treeHeight right)) <= 1
+
+[<FsCheck.NUnit.Property>]
+let ``Concat is associative`` (xs1: list<int>, xs2: list<int>, xs3: list<int>) =
+    let folder state x = insert x state
+    let tree1 = List.fold folder E xs1
+    let tree2 = List.fold folder E xs2
+    let tree3 = List.fold folder E xs3
+    let result1 = concat (concat tree1 tree2) tree3
+    let result2 = concat tree1 (concat tree2 tree3)
+    result1 = result2
+
+[<FsCheck.NUnit.Property>]
+let ``E is neutral element`` (tree: AVLTree<int>) =
+    tree = concat tree E && tree = concat E tree
 ```
