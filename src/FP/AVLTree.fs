@@ -7,15 +7,14 @@ module AVLTree =
         | E
         | T of AVLTree<'a> * 'a * AVLTree<'a>
 
-
-    let rec private treeHeight tree =
-        match tree with
-        | E -> 0
-        | T (left, _, right) -> (Math.Max((treeHeight left), (treeHeight right))) + 1
+        member x.Height =
+            match x with
+            | E -> 0
+            | T (left, _, right) -> (max left.Height right.Height) + 1
 
     let private balanceFactor tree =
         match tree with
-        | T (left, _, right) -> (treeHeight right) - (treeHeight left)
+        | T (left, _, right) -> right.Height - left.Height
         | _ -> 0
 
     let private rotateLeft tree =
