@@ -95,7 +95,7 @@ let TestConcat () =
     let tree2 = T(T(T(E, 3, E), 4, E), 5, T(E, 6, E))
 
     let treeAfterConcat =
-        T(T(T(E, 1, E), 2, T(E, 3, E)), 3, T(T(E, 4, E), 5, T(E, 6, E)))
+        T(T(T(E, 1, E), 2, E), 3, T(T(T(E, 3, E), 4, E), 5, T(E, 6, E)))
 
     Assert.AreEqual(treeAfterConcat, concat tree1 tree2)
 
@@ -133,7 +133,7 @@ let ``Tree is balanced after delete`` (xs: list<int>) =
         | T (left, _, right) -> abs ((treeHeight left) - (treeHeight right)) <= 1
 
 [<FsCheck.NUnit.Property>]
-let ``Concat is associative`` (xs1: list<int>, xs2: list<int>, xs3: list<int>) =
+let ``Concat is associative`` (xs1: list<string>, xs2: list<string>, xs3: list<string>) =
     let folder state x = insert x state
     let tree1 = List.fold folder E xs1
     let tree2 = List.fold folder E xs2

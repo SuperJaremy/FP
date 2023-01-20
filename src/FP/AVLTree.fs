@@ -75,33 +75,13 @@ module AVLTree =
                 let max = findMax left
                 T((delete max left), max, right) |> balanceTree
 
-    let rec private _concat tree1 tree2 state =
-        match tree1, tree2 with
-        | T _, T _ ->
-            let max1 = findMax tree1
-            let max2 = findMax tree2
-
-            if max1 >= max2 then
-                _concat (delete max1 tree1) tree2 (insert max1 state)
-            else
-                _concat tree1 (delete max2 tree2) (insert max2 state)
-        | E, T _ ->
-            let treeMax = findMax tree2
-            _concat tree1 (delete treeMax tree2) (insert treeMax state)
-        | T _, E ->
-            let treeMax = findMax tree1
-            _concat (delete treeMax tree1) tree2 (insert treeMax state)
-        | _ -> state
-
-
-
-    let concat tree1 tree2 =
+    let rec concat tree1 tree2 =
         match tree2 with
         | E -> tree1
         | _ ->
             match tree1 with
             | E -> tree2
-            | T _ -> _concat tree1 tree2 E
+            | T (left, item, right) -> insert item tree2 |> concat left |> concat right
 
     let rec private insertTreeByElement from into =
         match from with
