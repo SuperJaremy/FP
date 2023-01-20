@@ -18,7 +18,7 @@ module TailRecursion =
         let sideDots = matrixSide + 1
 
         match point with
-        | 0 -> [ 0UL ]
+        | 0 -> [ 1UL ]
         | _ ->
             let newState = countPaths_in (point - 1) matrixSide state
 
