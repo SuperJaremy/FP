@@ -103,6 +103,12 @@ module AVLTree =
             | E -> tree2
             | T _ -> _concat tree1 tree2 E
 
+    let rec private insertTreeByElement from into =
+        match from with
+        | E -> into
+        | T (E, item, E) -> insert item into
+        | T (left, item, right) -> insertTreeByElement left into |> insertTreeByElement right |> insert item
+
     let rec filter cond tree =
         match tree with
         | E -> E
@@ -118,10 +124,21 @@ module AVLTree =
             else
                 filter cond right
         | T (left, item, right) ->
-            if cond item then
-                concat (filter cond left |> insert item) (filter cond right)
-            else
-                concat (filter cond left) (filter cond right)
+            // if cond item then
+            //     concat (filter cond left |> insert item) (filter cond right)
+            // else
+            //     concat (filter cond left) (filter cond right)
+            let leftTree = filter cond left
+            let rightTree = filter cond right
+
+            let newTree =
+                if leftTree.Height >= rightTree.Height then
+                    insertTreeByElement rightTree leftTree
+                else
+                    insertTreeByElement leftTree rightTree
+
+            if cond item then insert item newTree else newTree
+
 
 
     let rec private _map f tree state =

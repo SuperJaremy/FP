@@ -133,7 +133,13 @@ let rec private findMax tree =
 ```
 ### Фильтрация
 ```F#
-  let rec filter cond tree =
+     let rec private insertTreeByElement from into =
+        match from with
+        | E -> into
+        | T (E, item, E) -> insert item into
+        | T (left, item, right) -> insertTreeByElement left into |> insertTreeByElement right |> insert item
+
+    let rec filter cond tree =
         match tree with
         | E -> E
         | T (E, item, E) -> if cond item then tree else E
@@ -148,10 +154,16 @@ let rec private findMax tree =
             else
                 filter cond right
         | T (left, item, right) ->
-            if cond item then
-                concat (filter cond left |> insert item) (filter cond right)
-            else
-                concat (filter cond left) (filter cond right)
+            let leftTree = filter cond left
+            let rightTree = filter cond right
+
+            let newTree =
+                if leftTree.Height >= rightTree.Height then
+                    insertTreeByElement rightTree leftTree
+                else
+                    insertTreeByElement leftTree rightTree
+
+            if cond item then insert item newTree else newTree
 ```
 ### Отображение
 ```F#
