@@ -164,3 +164,9 @@ module AVLTree =
         | T (left, item, right) ->
             foldRight folder state right
             |> fun x -> folder x item |> fun x -> foldRight folder x left
+
+    let toList tree1 =
+        let folder state x = state @ [ x ]
+        foldLeft folder [] tree1
+
+    let eq tree1 tree2 = (toList tree1) = (toList tree2)

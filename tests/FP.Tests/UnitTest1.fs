@@ -21,9 +21,7 @@ let TestRightBalancing () =
     Assert.AreEqual(T(T(E, 1, E), 2, T(E, 3, E)), insert 3 E |> insert 2 |> insert 1)
 
 [<Test>]
-let TestDeleteFromEmpty () =
-    let tree = E :> AVLTree<int>
-    Assert.AreEqual(tree, delete 100 E)
+let TestDeleteFromEmpty () = Assert.IsTrue(eq E (delete 100 E))
 
 [<Test>]
 let TestDeleteValueNotPresentInTree () =
@@ -142,8 +140,26 @@ let ``Concat is associative`` (xs1: list<int>, xs2: list<int>, xs3: list<int>) =
     let tree3 = List.fold folder E xs3
     let result1 = concat (concat tree1 tree2) tree3
     let result2 = concat tree1 (concat tree2 tree3)
-    result1 = result2
+    eq result1 result2
 
 [<FsCheck.NUnit.Property>]
 let ``E is identity element`` (tree: AVLTree<int>) =
     tree = concat tree E && tree = concat E tree
+
+[<FsCheck.NUnit.Property>]
+let ``Tree after insert is not eq to Tree`` (xs: list<int>, x: int) =
+    let tree = List.fold (fun state x -> insert x state) E xs
+    let treeAfter = insert x tree
+    not (eq tree treeAfter)
+
+[<FsCheck.NUnit.Property>]
+let ``Tree equals itself`` (xs: list<int>, x: int) =
+    let tree = List.fold (fun state x -> insert x state) E xs
+    eq tree tree
+
+[<FsCheck.NUnit.Property>]
+let ``Filter and double filter are same`` (xs: list<int>) =
+    let tree = List.fold (fun state x -> insert x state) E xs
+    let cond x = x % 2 = 0
+    let treeAfter = filter cond tree
+    eq treeAfter (filter cond treeAfter)
