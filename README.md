@@ -1,4 +1,3 @@
-![badge](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/SuperJaremy/d4297ee28b9cca7dc6c6d9b41dccebf1/raw/code-coverage.json)
 # Лабораторная работа 2
 
 
@@ -103,43 +102,17 @@ let rec private findMax tree =
 ```
 ### Конкатенация
 ```F#
-    let rec private _concat tree1 tree2 state =
-        match tree1, tree2 with
-        | T _, T _ ->
-            let max1 = findMax tree1
-            let max2 = findMax tree2
-
-            if max1 >= max2 then
-                _concat (delete max1 tree1) tree2 (insert max1 state)
-            else
-                _concat tree1 (delete max2 tree2) (insert max2 state)
-        | E, T _ ->
-            let treeMax = findMax tree2
-            _concat tree1 (delete treeMax tree2) (insert treeMax state)
-        | T _, E ->
-            let treeMax = findMax tree1
-            _concat (delete treeMax tree1) tree2 (insert treeMax state)
-        | _ -> state
-
-
-
-    let concat tree1 tree2 =
+let rec concat tree1 tree2 =
         match tree2 with
         | E -> tree1
         | _ ->
             match tree1 with
             | E -> tree2
-            | T _ -> _concat tree1 tree2 E
+            | T (left, item, right) -> insert item tree2 |> concat left |> concat right
 ```
 ### Фильтрация
 ```F#
-     let rec private insertTreeByElement from into =
-        match from with
-        | E -> into
-        | T (E, item, E) -> insert item into
-        | T (left, item, right) -> insertTreeByElement left into |> insertTreeByElement right |> insert item
-
-    let rec filter cond tree =
+let rec filter cond tree =
         match tree with
         | E -> E
         | T (E, item, E) -> if cond item then tree else E
@@ -154,16 +127,10 @@ let rec private findMax tree =
             else
                 filter cond right
         | T (left, item, right) ->
-            let leftTree = filter cond left
-            let rightTree = filter cond right
-
-            let newTree =
-                if leftTree.Height >= rightTree.Height then
-                    insertTreeByElement rightTree leftTree
-                else
-                    insertTreeByElement leftTree rightTree
-
-            if cond item then insert item newTree else newTree
+            if cond item then
+                concat (filter cond left |> insert item) (filter cond right)
+            else
+                concat (filter cond left) (filter cond right)
 ```
 ### Отображение
 ```F#
@@ -215,9 +182,7 @@ let TestRightBalancing () =
     Assert.AreEqual(T(T(E, 1, E), 2, T(E, 3, E)), insert 3 E |> insert 2 |> insert 1)
 
 [<Test>]
-let TestDeleteFromEmpty () =
-    let tree = E :> AVLTree<int>
-    Assert.AreEqual(tree, delete 100 E)
+let TestDeleteFromEmpty () = Assert.IsTrue(eq E (delete 100 E))
 
 [<Test>]
 let TestDeleteValueNotPresentInTree () =
@@ -291,7 +256,7 @@ let TestConcat () =
     let tree2 = T(T(T(E, 3, E), 4, E), 5, T(E, 6, E))
 
     let treeAfterConcat =
-        T(T(T(E, 1, E), 2, T(E, 3, E)), 3, T(T(E, 4, E), 5, T(E, 6, E)))
+        T(T(T(E, 1, E), 2, E), 3, T(T(T(E, 3, E), 4, E), 5, T(E, 6, E)))
 
     Assert.AreEqual(treeAfterConcat, concat tree1 tree2)
 ```
@@ -331,16 +296,34 @@ let ``Tree is balanced after delete`` (xs: list<int>) =
         | T (left, _, right) -> abs ((treeHeight left) - (treeHeight right)) <= 1
 
 [<FsCheck.NUnit.Property>]
-let ``Concat is associative`` (xs1: list<int>, xs2: list<int>, xs3: list<int>) =
+let ``Concat is associative`` (xs1: list<string>, xs2: list<string>, xs3: list<string>) =
     let folder state x = insert x state
     let tree1 = List.fold folder E xs1
     let tree2 = List.fold folder E xs2
     let tree3 = List.fold folder E xs3
     let result1 = concat (concat tree1 tree2) tree3
     let result2 = concat tree1 (concat tree2 tree3)
-    result1 = result2
+    eq result1 result2
 
 [<FsCheck.NUnit.Property>]
 let ``E is identity element`` (tree: AVLTree<int>) =
     tree = concat tree E && tree = concat E tree
+
+[<FsCheck.NUnit.Property>]
+let ``Tree after insert is not eq to Tree`` (xs: list<int>, x: int) =
+    let tree = List.fold (fun state x -> insert x state) E xs
+    let treeAfter = insert x tree
+    not (eq tree treeAfter)
+
+[<FsCheck.NUnit.Property>]
+let ``Tree equals itself`` (xs: list<int>, x: int) =
+    let tree = List.fold (fun state x -> insert x state) E xs
+    eq tree tree
+
+[<FsCheck.NUnit.Property>]
+let ``Filter and double filter are same`` (xs: list<int>) =
+    let tree = List.fold (fun state x -> insert x state) E xs
+    let cond x = x % 2 = 0
+    let treeAfter = filter cond tree
+    eq treeAfter (filter cond treeAfter)
 ```
