@@ -104,20 +104,20 @@ module AVLTree =
             else
                 filter cond right
         | T (left, item, right) ->
-            // if cond item then
-            //     concat (filter cond left |> insert item) (filter cond right)
-            // else
-            //     concat (filter cond left) (filter cond right)
-            let leftTree = filter cond left
-            let rightTree = filter cond right
-
-            let newTree =
-                if leftTree.Height >= rightTree.Height then
-                    insertTreeByElement rightTree leftTree
-                else
-                    insertTreeByElement leftTree rightTree
-
-            if cond item then insert item newTree else newTree
+            if cond item then
+                concat (filter cond left |> insert item) (filter cond right)
+            else
+                concat (filter cond left) (filter cond right)
+    // let leftTree = filter cond left
+    // let rightTree = filter cond right
+    //
+    // let newTree =
+    //     if leftTree.Height >= rightTree.Height then
+    //         insertTreeByElement rightTree leftTree
+    //     else
+    //         insertTreeByElement leftTree rightTree
+    //
+    // if cond item then insert item newTree else newTree
 
 
 
