@@ -90,6 +90,25 @@ module Recursion =
     let countPaths matrixSide =
         countPaths_in ((matrixSide + 1) * (matrixSide + 1) - 1) matrixSide
 ```
+#### Хвостовая рекурсия
+```F#
+module TailRecursion =
+    let rec private countPaths_in point matrixSide state =
+        let sideDots = matrixSide + 1
+
+        match point with
+        | 0 -> [ 1UL ]
+        | _ ->
+            let newState = countPaths_in (point - 1) matrixSide state
+
+            match point with
+            | idx when point < sideDots || point % sideDots = 0 -> List.insertAt idx 1UL newState
+            | _ -> List.insertAt point (newState[point - 1] + newState[point - sideDots]) newState
+
+    let countPaths matrixSide =
+        let point = ((matrixSide + 1) * (matrixSide + 1) - 1)
+        List.item point (countPaths_in point matrixSide [])
+```
 #### Генерация последовательности
 ```F#
 module Sequence =
