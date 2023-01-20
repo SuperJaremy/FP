@@ -163,3 +163,6 @@ let ``Filter and double filter are same`` (xs: list<int>) =
     let cond x = x % 2 = 0
     let treeAfter = filter cond tree
     eq treeAfter (filter cond treeAfter)
+
+[<EntryPoint>]
+let main argv = 0
