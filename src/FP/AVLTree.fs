@@ -75,19 +75,23 @@ module AVLTree =
                 let max = findMax left
                 T((delete max left), max, right) |> balanceTree
 
+    let rec private insertTreeByElement from into =
+        match from with
+        | E -> into
+        | T (E, item, E) -> insert item into
+        | T (left, item, right) -> insertTreeByElement left into |> insertTreeByElement right |> insert item
+
     let rec concat tree1 tree2 =
         match tree2 with
         | E -> tree1
         | _ ->
             match tree1 with
             | E -> tree2
-            | T (left, item, right) -> insert item tree2 |> concat left |> concat right
-
-    let rec private insertTreeByElement from into =
-        match from with
-        | E -> into
-        | T (E, item, E) -> insert item into
-        | T (left, item, right) -> insertTreeByElement left into |> insertTreeByElement right |> insert item
+            | T _ ->
+                if tree1.Height >= tree2.Height then
+                    insertTreeByElement tree2 tree1
+                else
+                    insertTreeByElement tree1 tree2
 
     let rec filter cond tree =
         match tree with
@@ -105,19 +109,9 @@ module AVLTree =
                 filter cond right
         | T (left, item, right) ->
             if cond item then
-                concat (filter cond left |> insert item) (filter cond right)
+                concat (filter cond left) (filter cond right) |> insert item
             else
                 concat (filter cond left) (filter cond right)
-    // let leftTree = filter cond left
-    // let rightTree = filter cond right
-    //
-    // let newTree =
-    //     if leftTree.Height >= rightTree.Height then
-    //         insertTreeByElement rightTree leftTree
-    //     else
-    //         insertTreeByElement leftTree rightTree
-    //
-    // if cond item then insert item newTree else newTree
 
 
 

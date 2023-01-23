@@ -102,13 +102,23 @@ let rec private findMax tree =
 ```
 ### Конкатенация
 ```F#
-let rec concat tree1 tree2 =
+    let rec private insertTreeByElement from into =
+        match from with
+        | E -> into
+        | T (E, item, E) -> insert item into
+        | T (left, item, right) -> insertTreeByElement left into |> insertTreeByElement right |> insert item
+
+    let rec concat tree1 tree2 =
         match tree2 with
         | E -> tree1
         | _ ->
             match tree1 with
             | E -> tree2
-            | T (left, item, right) -> insert item tree2 |> concat left |> concat right
+            | T _ ->
+                if tree1.Height >= tree2.Height then
+                    insertTreeByElement tree2 tree1
+                else
+                    insertTreeByElement tree1 tree2
 ```
 ### Фильтрация
 ```F#
@@ -256,7 +266,7 @@ let TestConcat () =
     let tree2 = T(T(T(E, 3, E), 4, E), 5, T(E, 6, E))
 
     let treeAfterConcat =
-        T(T(T(E, 1, E), 2, E), 3, T(T(T(E, 3, E), 4, E), 5, T(E, 6, E)))
+        T(T(T(E, 1, T(E, 2, E)), 3, T(E, 3, E)), 4, T(E, 5, T(E, 6, E)))
 
     Assert.AreEqual(treeAfterConcat, concat tree1 tree2)
 ```
