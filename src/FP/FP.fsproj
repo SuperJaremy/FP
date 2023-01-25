@@ -6,7 +6,17 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Program.fs"/>
+        <Compile Include="Approximation\Functions.fs" />
+        <Compile Include="Approximation\Squares.fs" />
+        <Compile Include="Approximation\Splines.fs" />
+        <Compile Include="Approximation\Methods.fs" />
+        <Compile Include="IO\Input.fs" />
+        <Compile Include="IO\Output.fs" />
+        <Compile Include="Program.fs" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Argu" Version="6.1.1" />
     </ItemGroup>
 
 </Project>
