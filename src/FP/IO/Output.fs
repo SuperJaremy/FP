@@ -8,7 +8,6 @@
         | Approximations.Logarithmic -> printfn "%s" "Logarithmic:"
         | Approximations.Exponential -> printfn "%s" "Exponential:"
         | Approximations.Power -> printfn "%s" "Power:"
-        | Approximations.Polynomial -> printfn "%s" "Polynomial:"
         for (x,y) in values do
             printfn "x: %f y: %f" x y
 

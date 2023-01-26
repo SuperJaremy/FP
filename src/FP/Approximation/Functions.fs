@@ -4,4 +4,3 @@
         | Logarithmic
         | Exponential
         | Power
-        | Polynomial

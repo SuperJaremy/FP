@@ -27,5 +27,4 @@
             | Logarithmic -> Logarithmic, logarithmic
             | Exponential -> Exponential, exponential
             | Power -> Power, power
-            | Polynomial -> Polynomial, polynomial
 
