@@ -4,7 +4,7 @@ open Microsoft.FSharp.Core
 let rec operate functions dots interval =
     let newDot = Input.readNewDot()
     let newDots = List.append dots [newDot]
-    if List.length newDots < 10 then
+    if List.length newDots < 7 then
        operate functions newDots interval
     else
         let (first, _) = newDots.Head
