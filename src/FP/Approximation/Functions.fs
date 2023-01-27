@@ -1,6 +1,7 @@
 ﻿namespace Approximations
-     type Functions =
-        | Linear
-        | Logarithmic
-        | Exponential
-        | Power
+
+type Functions =
+    | Linear
+    | Logarithmic
+    | Exponential
+    | Power
