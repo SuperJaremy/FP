@@ -1,6 +1,7 @@
 ﻿module Input
 
 open System
+open Approximations
 
 let parseFloat s =
     try
@@ -21,6 +22,6 @@ let readTwoNumbersFromStdin () =
     else
         FormatException("Wrong input format") |> raise
 
-let readNewDot () =
+let readNewDot (outbox:ApproximationFunctions.Approximation) =
     let dot = readTwoNumbersFromStdin ()
-    dot
+    outbox.approximate dot

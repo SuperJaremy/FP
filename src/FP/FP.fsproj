@@ -6,12 +6,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Compile Include="Approximation\Functions.fs" />
-        <Compile Include="Approximation\Squares.fs" />
-        <Compile Include="Approximation\Splines.fs" />
-        <Compile Include="Approximation\Methods.fs" />
-        <Compile Include="IO\Input.fs" />
-        <Compile Include="IO\Output.fs" />
+        <Compile Include="Functions.fs" />
+        <Compile Include="Output.fs" />
+        <Compile Include="Approximations.fs" />
+        <Compile Include="Input.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
