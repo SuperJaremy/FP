@@ -22,6 +22,6 @@ let readTwoNumbersFromStdin () =
     else
         FormatException("Wrong input format") |> raise
 
-let readNewDot (outbox:ApproximationFunctions.Approximation) =
+let readNewDot (outbox: ApproximationFunctions.Approximation) =
     let dot = readTwoNumbersFromStdin ()
     outbox.approximate dot

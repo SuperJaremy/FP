@@ -1,9 +1,8 @@
 ﻿namespace Approximations
 
-    type Functions =
+type Functions =
     | Linear
     | Logarithmic
     | Exponential
     | Power
     | Segments
-
