@@ -9,26 +9,15 @@
 - требуется использовать идиоматичный для технологии стиль программирования.
 
 # Имплементация
-## Структура
-### Методы
-```F#
-type Methods =
-    | Splines
-    | Squares
-
-module Method =
-    let by method =
-        match method with
-        | Squares -> (Squares, ApproximationSquares.approximate)
-        | Splines -> (Splines, ApproximationSplines.approximate)
-```
-### Функции
+## Функции
 ```F#
 type Functions =
     | Linear
     | Logarithmic
     | Exponential
     | Power
+    | Segments
+
 ```
 ## Ввод/Вывод
 ### Ввод
@@ -36,6 +25,7 @@ type Functions =
 module Input
 
 open System
+open Approximations
 
 let parseFloat s =
     try
@@ -56,60 +46,56 @@ let readTwoNumbersFromStdin () =
     else
         FormatException("Wrong input format") |> raise
 
-let readNewDot () =
+let readNewDot (outbox: ApproximationFunctions.Approximation) =
     let dot = readTwoNumbersFromStdin ()
-    dot
+    outbox.approximate dot
+
 ```
 ### Вывод
 ```F#
 module Output
 
-let printApproximation (method, func, values) =
-    match method with
-    | Approximations.Squares -> printfn "%s" "Squares:"
-    | Approximations.Splines -> printfn "%s" "Splines:"
+open Approximations
 
-    match func with
-    | Approximations.Linear -> printfn "%s" "Linear:"
-    | Approximations.Logarithmic -> printfn "%s" "Logarithmic:"
-    | Approximations.Exponential -> printfn "%s" "Exponential:"
-    | Approximations.Power -> printfn "%s" "Power:"
+type PrinterAgent() =
+    let agent =
+        MailboxProcessor.Start(fun inbox ->
+            let rec messageLoop () =
+                async {
+                    let! msg = inbox.Receive()
+                    let func, values = msg
 
-    for (x, y) in values do
-        printfn "x: %f y: %f" x y
+                    match func with
+                    | Linear -> printfn "%s" "Linear:"
+                    | Logarithmic -> printfn "%s" "Logarithmic:"
+                    | Exponential -> printfn "%s" "Exponential:"
+                    | Power -> printfn "%s" "Power:"
+                    | Segments -> printfn "%s" "Segments:"
+
+                    for (x, y) in values do
+                        printfn "x: %f y: %f" x y
+
+                    return! messageLoop ()
+                }
+
+            messageLoop ())
+
+    member this.print x = agent.Post x
+
 ```
 ## Основной цикл
 ```F#
+open Approximations
 open Argu
 open Microsoft.FSharp.Core
 
-let rec operate functions dots interval =
-    let newDot = Input.readNewDot ()
-    let newDots = List.append dots [ newDot ]
-
-    if List.length newDots < 7 then
-        operate functions newDots interval
-    else
-        let (first, _) = newDots.Head
-        let (last, _) = List.last newDots
-        let generated = seq { first..interval..last }
-
-        let calculated =
-            List.map (fun (x, (y, z)) -> (x, y, Seq.map (fun value -> (value, value |> z newDots)) generated)) functions
-
-        List.map Output.printApproximation calculated |> ignore
-        operate functions newDots interval
-
-
 type Arguments =
-    | [<AltCommandLine("-m"); ExactlyOnce>] Method of Approximations.Methods list
-    | [<AltCommandLine("-f"); ExactlyOnce>] Function of Approximations.Functions list
+    | [<AltCommandLine("-f"); ExactlyOnce>] Function of Functions list
     | [<AltCommandLine("-i"); ExactlyOnce>] Interval of float
 
     interface IArgParserTemplate with
         member this.Usage =
             match this with
-            | Method _ -> "approximation method"
             | Function _ -> "type of function to approximate to"
             | Interval _ -> "interval between calculated dots"
 
@@ -117,26 +103,30 @@ type Arguments =
 let main argv =
     let parser = ArgumentParser.Create<Arguments>()
     let results = parser.Parse argv
-    let methods = results.GetResults Method |> List.head
     let funcs = results.GetResults Function |> List.head
     let interval = results.GetResults Interval |> List.head
-    let approxes = List.map Approximations.Method.by methods
 
-    let functions =
-        List.fold (fun state (x, y) -> List.map (fun elem -> (x, y elem)) funcs |> List.append state) [] approxes
+    let pAgent = Output.PrinterAgent()
+    let aAgent = ApproximationFunctions.Approximation(pAgent, funcs, interval)
 
-    operate functions [] interval
+    let rec operate () =
+        Input.readNewDot aAgent
+        operate ()
+
+    operate ()
+
     0
+
 ```
 ## Аппроксимация
-### Метод наименьших квадратов
 ```F#
 namespace Approximations
 
 open System
+open System.Collections.Generic
 open Microsoft.FSharp.Core
 
-module ApproximationSquares =
+module ApproximationFunctions =
 
     let private lin dots =
         let sx, sxx, sy, sxy =
@@ -171,10 +161,86 @@ module ApproximationSquares =
         let a, b = lin newDots
         fun x -> (exp b) * Math.Pow(x, a)
 
-    let approximate func =
+    let segments dots =
+        let pairs = List.pairwise dots
+
+        let segs =
+            List.map
+                (fun ((a, b), (c, d)) ->
+                    let k = (d - b) / (c - a)
+                    let b = b - k * a
+                    fun x -> k * x + b)
+                pairs
+
+        let approximations =
+            Seq.map2
+                (fun a b ->
+                    let dot, _ = a
+                    let x, _ = dot
+                    x, b)
+                pairs
+                segs
+
+        fun x ->
+            (let _, func =
+                approximations
+                |> Seq.filter (fun elem ->
+                    let dot, _ = elem
+                    dot <= x)
+                |> Seq.maxBy (fun elem ->
+                    let dot, _ = elem
+                    dot)
+
+             func x)
+
+    let private getApproximation func =
         match func with
         | Linear -> Linear, linear
         | Logarithmic -> Logarithmic, logarithmic
         | Exponential -> Exponential, exponential
         | Power -> Power, power
+        | Segments -> Segments, segments
+
+    let rec private handleList (inbox: MailboxProcessor<'Msg>) list =
+        async {
+            let! dot = inbox.Receive()
+            let newList = list @ [ dot ]
+
+            match newList.Length with
+            | len when len < 10 -> return! handleList inbox newList
+            | len when len = 10 -> return newList
+            | len when len > 10 -> return newList.Tail
+            | _ -> return []
+        }
+
+    type Approximation(printer: Output.PrinterAgent, functions, interval) =
+        let agent =
+            MailboxProcessor.Start(fun inbox ->
+                let rec messageLoop dots =
+                    async {
+                        let! newDots = handleList inbox dots
+
+                        let approximations =
+                            functions
+                            |> List.map (fun func ->
+                                let (name, func) = getApproximation func
+                                name, func newDots)
+
+                        let start, _ = newDots.Head
+                        let finish, _ = List.last newDots
+                        let generated = seq { start..interval..finish }
+
+                        let calculated =
+                            approximations
+                            |> List.map (fun (name, func) -> name, (generated |> Seq.map (fun x -> (x, func x))))
+
+                        for i in calculated do
+                            printer.print i
+
+                        return! messageLoop newDots
+                    }
+
+                messageLoop [])
+
+        member this.approximate dot = agent.Post dot
 ```
