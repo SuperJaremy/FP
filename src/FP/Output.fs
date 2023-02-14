@@ -15,7 +15,7 @@ type PrinterAgent() =
                     | Logarithmic -> printfn "%s" "Logarithmic:"
                     | Exponential -> printfn "%s" "Exponential:"
                     | Power -> printfn "%s" "Power:"
-                    | Splines -> printfn "%s" "Splines:"
+                    | Segments -> printfn "%s" "Segments:"
 
                     for (x, y) in values do
                         printfn "x: %f y: %f" x y

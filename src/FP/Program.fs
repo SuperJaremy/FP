@@ -3,7 +3,7 @@ open Argu
 open Microsoft.FSharp.Core
 
 type Arguments =
-    | [<AltCommandLine("-f"); ExactlyOnce>] Function of Approximations.Functions list
+    | [<AltCommandLine("-f"); ExactlyOnce>] Function of Functions list
     | [<AltCommandLine("-i"); ExactlyOnce>] Interval of float
 
     interface IArgParserTemplate with

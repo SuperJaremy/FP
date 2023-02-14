@@ -5,5 +5,5 @@
     | Logarithmic
     | Exponential
     | Power
-    | Splines
+    | Segments
 

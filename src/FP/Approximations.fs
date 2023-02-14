@@ -39,7 +39,37 @@ module ApproximationFunctions =
         let a, b = lin newDots
         fun x -> (exp b) * Math.Pow(x, a)
 
-    let splines dots = fun x -> x
+    let segments dots =
+        let pairs = List.pairwise dots
+
+        let segs =
+            List.map
+                (fun ((a, b), (c, d)) ->
+                    let k = (d - b) / (c - a)
+                    let b = b - k * a
+                    fun x -> k * x + b)
+                pairs
+
+        let approximations =
+            Seq.map2
+                (fun a b ->
+                    let dot, _ = a
+                    let x, _ = dot
+                    x, b)
+                pairs
+                segs
+
+        fun x ->
+            (let _, func =
+                approximations
+                |> Seq.filter (fun elem ->
+                    let dot, _ = elem
+                    dot <= x)
+                |> Seq.maxBy (fun elem ->
+                    let dot, _ = elem
+                    dot)
+
+             func x)
 
     let private getApproximation func =
         match func with
@@ -47,7 +77,7 @@ module ApproximationFunctions =
         | Logarithmic -> Logarithmic, logarithmic
         | Exponential -> Exponential, exponential
         | Power -> Power, power
-        | Splines -> Splines, splines
+        | Segments -> Segments, segments
 
     let rec private handleList (inbox: MailboxProcessor<'Msg>) list =
         async {
