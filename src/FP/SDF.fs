@@ -130,6 +130,7 @@ module SDF =
                 loop ())
 
         member this.Post(graph: SDFGraph, num: Option<float>) = agent.Post(graph, num)
+        member this.isOperandA = isOperandA
 
     and Edge = EdgeData of EdgeAgent
 
@@ -252,7 +253,7 @@ module SDF =
         let edge = EdgeData(EdgeAgent(vertexId, true))
         let _, newGraph = Graph.addVertex node g
         let _, newGraph = Graph.addEdge previousNode.id vertexId edge newGraph
-        SDF(SDFGraph(newGraph), entries, exits @ [ exitNode ])
+        node, SDF(SDFGraph(newGraph), entries, exits @ [ exitNode ])
 
 
     let submitValue (value: float) (entryId: string) (graph: SDF) =
